@@ -20,8 +20,8 @@ let p2 = {
   key: '',
   direction: '',
   x: 720,
-  y: 15,
-  history: [[720, 15]],
+  y: 720,
+  history: [[720, 720]],
   alive: true
 };
 
