@@ -24,22 +24,22 @@ function setDirection(key, player, up, right, down, left) {
     case up:
       if (player.direction !== 'DOWN') {
         player.direction = 'UP';
-      }
+      };
       break;
     case right:
       if (player.direction !== 'LEFT') {
         player.direction = 'RIGHT';
-      }
+      };
       break;
     case down:
       if (player.direction !== 'UP') {
         player.direction = 'DOWN';
-      }
+      };
       break;
     case left:
       if (player.direction !== 'RIGHT') {
         player.direction = 'LEFT';
-      }
+      };
       break;
     default:
       break;
