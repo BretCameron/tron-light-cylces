@@ -10,6 +10,8 @@ class Player {
     this.key = '';
     this.x = x;
     this.y = y;
+    this.constructor.counter = (this.constructor.counter || 0) + 1;
+    this._id = this.constructor.counter;
     Player.allInstances.push(this);
   };
 };
@@ -71,6 +73,16 @@ for (let i = 0; i < canvas.width / unit; i++) {
 };
 
 function draw() {
+
+  const alivePlayers = Player.allInstances.filter(p => p.dead === false);
+
+  if (alivePlayers.length === 1) {
+    console.log('Player ' + alivePlayers[0]._id + ' wins!');
+    clearInterval(game);
+  } else if (alivePlayers.length === 0) {
+    console.log('Draw!');
+    clearInterval(game);
+  }
 
   Player.allInstances.forEach(p => {
 
