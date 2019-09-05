@@ -3,27 +3,28 @@ var result = document.getElementById('result');
 
 var ctx = c.getContext("2d");
 
-document.addEventListener("keydown", direction);
-
 const box = 15;
+const computer = false;
+let automaticDirection;
 
 let p1 = {
   key: '',
   direction: '',
-  x: 15,
-  y: 15,
-  history: [[15, 15]],
+  x: 90,
+  y: 90,
+  history: [[90, 90]],
   alive: true
 };
 
 let p2 = {
   key: '',
   direction: '',
-  x: 720,
-  y: 720,
-  history: [[720, 720]],
+  x: 645,
+  y: 645,
+  history: [[645, 645]],
   alive: true
 };
+
 
 function direction(event) {
   let key = event.keyCode;
@@ -38,6 +39,7 @@ function direction(event) {
     p1.key = "DOWN";
   };
 
+
   if (key == 65 && p2.direction != "RIGHT") {
     p2.key = "LEFT";
   } else if (key == 87 && p2.direction != "DOWN") {
@@ -49,6 +51,14 @@ function direction(event) {
   }
 
 }
+
+if (computer) {
+  const keys = [65, 87, 68, 83];
+  direction({ keyCode: keys[parseInt(Math.random() * 4)] })
+}
+
+document.addEventListener("keydown", direction);
+
 
 function drawBg() {
 
@@ -62,8 +72,68 @@ function drawBg() {
 
 drawBg();
 
+let frame = 0;
 
 function draw() {
+  frame++
+
+  if (computer) {
+    let dangerZones = [...p1.history, ...p2.history];
+    let possibleChoices = new Set(['LEFT', 'UP', 'RIGHT', 'DOWN']);
+
+    // Remove ability to turn into the walls
+    if (p2.x <= 15) possibleChoices.delete('LEFT');
+    if (p2.y <= 15) possibleChoices.delete('UP');
+    if (p2.x >= 720) possibleChoices.delete('RIGHT');
+    if (p2.y >= 720) possibleChoices.delete('DOWN');
+
+    // Remove ability to go back on self
+    if (p2.direction === 'RIGHT') possibleChoices.delete('LEFT');
+    if (p2.direction === 'LEFT') possibleChoices.delete('RIGHT');
+    if (p2.direction === 'UP') possibleChoices.delete('DOWN');
+    if (p2.direction === 'DOWN') possibleChoices.delete('UP');
+
+    // Remove ability to collide with self or opponent
+    for (let i = 0; i < dangerZones.length; i++) {
+      if (p2.x + box === dangerZones[i][0] && p2.y === dangerZones[i][1]) {
+        possibleChoices.delete('RIGHT');
+        console.log(`Can't go RIGHT`)
+      }
+
+      if (p2.x - box === dangerZones[i][0] && p2.y === dangerZones[i][1]) {
+        possibleChoices.delete('LEFT');
+        console.log(`Can't go LEFT`)
+      }
+
+
+      if (p2.x === dangerZones[i][0] && p2.y + box === dangerZones[i][1]) {
+        possibleChoices.delete('UP');
+        console.log(`Can't go UP`)
+      }
+
+      if (p2.x === dangerZones[i][0] && p2.y - box === dangerZones[i][1]) {
+        possibleChoices.delete('DOWN');
+        console.log(`Can't go DOWN`)
+      }
+    }
+
+    automaticDirection = (Array.from(possibleChoices)[parseInt(Math.random() * 4)])
+
+    switch (automaticDirection) {
+      case 'UP':
+        direction({ keyCode: 87 })
+        break;
+      case 'DOWN':
+        direction({ keyCode: 83 })
+        break;
+      case 'LEFT':
+        direction({ keyCode: 65 })
+        break;
+      case 'RIGHT':
+        direction({ keyCode: 68 })
+        break;
+    }
+  }
 
   if (!p1.alive) {
     result.innerText = (`Pink Wins!`)
@@ -73,7 +143,6 @@ function draw() {
   if (!p2.alive) {
     result.innerText = (`Blue Wins!`)
     clearInterval(game);
-
   }
 
   ctx.fillStyle = 'lightblue';
@@ -166,7 +235,6 @@ function draw() {
   };
 
 }
-
 
 let game;
 let speed = 100;
