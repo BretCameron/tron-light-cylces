@@ -7,7 +7,7 @@ class Player {
     this.color = color || '#fff';
     this.dead = false;
     this.direction = '';
-    this.history = [[x, y]];
+    this.key = '';
     this.x = x;
     this.y = y;
     Player.allInstances.push(this);
@@ -22,20 +22,24 @@ const p2 = new Player(unit * 43, unit * 43, '#ffc0cb');
 function setDirection(key, player, up, right, down, left) {
   switch (key) {
     case up:
-      if (player.direction !== 'DOWN')
+      if (player.direction !== 'DOWN') {
         player.direction = 'UP';
+      }
       break;
     case right:
-      if (player.direction !== 'LEFT')
+      if (player.direction !== 'LEFT') {
         player.direction = 'RIGHT';
+      }
       break;
     case down:
-      if (player.direction !== 'UP')
+      if (player.direction !== 'UP') {
         player.direction = 'DOWN';
+      }
       break;
     case left:
-      if (player.direction !== 'RIGHT')
+      if (player.direction !== 'RIGHT') {
         player.direction = 'LEFT';
+      }
       break;
     default:
       break;
@@ -69,10 +73,29 @@ for (let i = 0; i < canvas.width / unit; i++) {
 function draw() {
 
   Player.allInstances.forEach(p => {
-    context.fillStyle = p.color;
-    context.fillRect(p.x, p.y, unit, unit);
-    context.strokeStyle = 'black';
-    context.strokeRect(p.x, p.y, unit, unit);
+
+    if (p.direction) {
+
+      context.fillStyle = p.color;
+      context.fillRect(p.x, p.y, unit, unit);
+      context.strokeStyle = 'black';
+      context.strokeRect(p.x, p.y, unit, unit);
+
+      if (!playableCells.has(`${p.x}x${p.y}y`)) {
+        p.dead = true;
+      }
+
+      playableCells.delete(`${p.x}x${p.y}y`);
+
+      if (!p.dead) {
+        if (p.direction == "LEFT") p.x -= unit;
+        if (p.direction == "UP") p.y -= unit;
+        if (p.direction == "RIGHT") p.x += unit;
+        if (p.direction == "DOWN") p.y += unit;
+      }
+
+    }
+
   })
 
 }
