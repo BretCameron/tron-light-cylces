@@ -1,7 +1,6 @@
 const canvas = document.getElementById('tron');
 const context = canvas.getContext('2d');
 const unit = 15;
-let p1, p2, p3, p4;
 
 class Player {
   constructor(x, y, color) {
@@ -23,18 +22,8 @@ class Player {
 
 Player.allInstances = [];
 
-function definePlayers(number) {
-  p1 = new Player(unit * 6, unit * 6, '#75A4FF');
-  p2 = new Player(unit * 43, unit * 43, '#FF5050');
-  if (number > 2) {
-    p3 = new Player(unit * 43, unit * 6, 'green');
-  };
-  if (number > 3) {
-    p4 = new Player(unit * 6, unit * 43, 'orange');
-  };
-}
-
-definePlayers(2);
+let p1 = new Player(unit * 6, unit * 6, '#75A4FF');
+let p2 = new Player(unit * 43, unit * 43, '#FF5050');
 
 function setKey(key, player, up, right, down, left) {
   switch (key) {
@@ -65,24 +54,63 @@ function setKey(key, player, up, right, down, left) {
 
 function handleKeyPress(event) {
   let key = event.keyCode;
+
+  if (key === 37 || key === 38 || key === 39 || key === 40) {
+    event.preventDefault();
+  };
+
   setKey(key, p1, 38, 39, 40, 37); // arrow keys
   setKey(key, p2, 87, 68, 83, 65); // WASD
-  setKey(key, p3, 73, 76, 75, 74); // IJKL
-  setKey(key, p4, 104, 102, 101, 100); // numpad 8456
+  // setKey(key, p3, 73, 76, 75, 74); // IJKL
+  // setKey(key, p4, 104, 102, 101, 100); // numpad 8456
 };
 
 document.addEventListener('keydown', handleKeyPress);
 
-// Determine playable cells
+function getPlayableCells(canvas, unit) {
+  let playableCells = new Set();
+  for (let i = 0; i < canvas.width / unit; i++) {
+    for (let j = 0; j < canvas.height / unit; j++) {
+      playableCells.add(`${i * unit}x${j * unit}y`);
+    };
+  };
+  return playableCells;
+};
+
 let playableCells = getPlayableCells(canvas, unit);
+
+function drawBackground() {
+  context.strokeStyle = '#001900';
+  for (let i = 0; i <= canvas.width / unit + 2; i += 2) {
+    for (let j = 0; j <= canvas.height / unit + 2; j += 2) {
+      context.strokeRect(0, 0, unit * i, unit * j);
+    };
+  };
+
+  context.strokeStyle = '#000000';
+  context.lineWidth = 2;
+  for (let i = 1; i <= canvas.width / unit; i += 2) {
+    for (let j = 1; j <= canvas.height / unit; j += 2) {
+      context.strokeRect(0, 0, unit * i, unit * j);
+    };
+  };
+  context.lineWidth = 1;
+};
+
 drawBackground();
 
-// Add player starting positions
+function drawStartingPositions(players) {
+  players.forEach(p => {
+    context.fillStyle = p.color;
+    context.fillRect(p.x, p.y, unit, unit);
+    context.strokeStyle = 'black';
+    context.strokeRect(p.x, p.y, unit, unit);
+  });
+};
+
 drawStartingPositions(Player.allInstances);
 
-let outcome;
-let winnerColor;
-let playerCount = Player.allInstances.length;
+let outcome, winnerColor, playerCount = Player.allInstances.length;
 
 function draw() {
   if (Player.allInstances.filter(p => !p.key).length === 0) {
@@ -98,7 +126,7 @@ function draw() {
     if (outcome) {
       createResultsScreen(winnerColor);
       clearInterval(game);
-    }
+    };
 
     Player.allInstances.forEach(p => {
 
@@ -111,7 +139,7 @@ function draw() {
         context.strokeStyle = 'black';
         context.strokeRect(p.x, p.y, unit, unit);
 
-        if (!playableCells.has(`${p.x}x${p.y}y`)) {
+        if (!playableCells.has(`${p.x}x${p.y}y`) && p.dead === false) {
           p.dead = true;
           p.direction = '';
           playerCount -= 1;
@@ -131,48 +159,9 @@ function draw() {
     });
 
   }
-
 }
 
 let game = setInterval(draw, 100);
-
-function drawBackground() {
-  context.strokeStyle = '#001900';
-  for (let i = 0; i <= canvas.width / unit + 2; i += 2) {
-    for (let j = 0; j <= canvas.height / unit + 2; j += 2) {
-      context.strokeRect(0, 0, unit * i, unit * j);
-    };
-  };
-
-  context.strokeStyle = '#000000';
-  context.lineWidth = 2;
-  for (let i = 1; i <= canvas.width / unit; i += 2) {
-    for (let j = 1; j <= canvas.height / unit; j += 2) {
-      context.strokeRect(0, 0, unit * i, unit * j);
-    };
-  };
-  context.lineWidth = 1;
-
-};
-
-function getPlayableCells(canvas, unit) {
-  let playableCells = new Set();
-  for (let i = 0; i < canvas.width / unit; i++) {
-    for (let j = 0; j < canvas.height / unit; j++) {
-      playableCells.add(`${i * unit}x${j * unit}y`);
-    };
-  };
-  return playableCells;
-}
-
-function drawStartingPositions(players) {
-  players.forEach(p => {
-    context.fillStyle = p.color;
-    context.fillRect(p.x, p.y, unit, unit);
-    context.strokeStyle = 'black';
-    context.strokeRect(p.x, p.y, unit, unit);
-  });
-}
 
 function createResultsScreen(color) {
   const resultNode = document.createElement('div');
@@ -194,7 +183,7 @@ function createResultsScreen(color) {
   resultText.style.textTransform = 'uppercase';
 
   const replayButton = document.createElement('button');
-  replayButton.innerText = 'Replay';
+  replayButton.innerText = 'Replay (Enter)';
   replayButton.style.fontFamily = 'Bungee, cursive';
   replayButton.style.textTransform = 'uppercase';
   replayButton.style.padding = '10px 30px';
@@ -206,28 +195,42 @@ function createResultsScreen(color) {
   resultNode.appendChild(resultText);
   resultNode.appendChild(replayButton);
   document.querySelector('body').appendChild(resultNode);
-}
 
-function resetPlayers(players) {
-  players.forEach(p => {
+  document.addEventListener('keydown', (e) => {
+    let key = event.keyCode;
+    if (key == 13 || key == 32 || key == 27 || key == 82)
+      resetGame();
+  });
+};
+
+function resetGame() {
+  // Remove the results node
+  const result = document.getElementById('result');
+  if (result) result.remove();
+
+  // Remove background then re-draw it
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  drawBackground();
+
+  // Reset playableCells
+  playableCells = getPlayableCells(canvas, unit);
+
+  // Reset players
+  Player.allInstances.forEach(p => {
     p.x = p.startX;
     p.y = p.startY;
     p.dead = false;
     p.direction = '';
     p.key = '';
   });
-}
-
-function resetGame() {
-  const result = document.getElementById('result');
-  if (result) result.remove();
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  drawBackground();
-  playableCells = getPlayableCells(canvas, unit);
   playerCount = Player.allInstances.length;
-  resetPlayers(Player.allInstances);
   drawStartingPositions(Player.allInstances);
+
+  // Reset outcome
   outcome = '';
   winnerColor = '';
+
+  // Ensure draw() has stopped, then re-trigger it
+  clearInterval(game);
   game = setInterval(draw, 100);
-}
+};
